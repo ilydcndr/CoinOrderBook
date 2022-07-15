@@ -7,7 +7,7 @@ const OrderBid = () => {
     <div style={{
       border:"1px solid #F0F0F0"
     }}>
-      <Table striped borderless>
+      <Table striped borderless size="sm">
         <tbody>
           <tr>
             <th scope="row">
