@@ -1,6 +1,6 @@
 import { OrderAsk } from "../OrderAsk/OrderAsk";
 import { OrderBid } from "../OrderBid/OrderBid";
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import Draggable from "react-draggable";
 import { Modal, ModalHeader, ModalBody } from "reactstrap";
 import { AiOutlineExpandAlt, AiOutlineShrink, AiOutlineSetting } from "react-icons/ai";
@@ -10,6 +10,41 @@ const OrderBook = () => {
   const [ShowModal, setShowModal] = useState(true);
   const [ChangeOrderList, setChangeOrderList] = useState(false);
   const [ModalFullScreen, setModalFullScreen] = useState(false);
+  const [SelectedCoin,setSelectedCoind] = useState('XBTUSD');
+  const [Bids,setBids] = [];
+  const [Asks,setAsks] = [];
+  const [NewBids, setNewBids] = [...Bids];
+  const [NewAsks, setNewAsks] = [];
+
+	useEffect(() => {
+    let ws = new WebSocket(`wss://ws.bitmex.com/realtime?subscribe=orderBookL2: wss://www.bitmex.com/realtime?subscribe=trade:${SelectedCoin},orderBook10:${SelectedCoin}`);
+
+    let apiCall = {};
+  
+    ws.onopen = () => {
+      ws.send(JSON.stringify(apiCall));
+    };
+
+    ws.onmessage = (event) => {
+      const json = JSON.parse(event.data);
+      try {
+        json.data.filter = (item => {
+          if (item.side === 'Sell') {
+              setBids([...Bids].concat(item));
+            }
+          else if (item.side === 'Buy') {
+            setAsks([...Asks].concat(item));
+          }
+        }
+        )} catch (err) {
+        console.log(err);
+        }
+    }}, []);
+
+  const newBids = () => {
+    setNewBids(NewBids.slice(0,9));
+    setBids(Bids.pop(NewBids));
+  }
 
   const modalClose = () => {
     setShowModal(false);
@@ -68,7 +103,7 @@ const OrderBook = () => {
                     }} >
                   <AiOutlineSetting />
                 </span>
-                <ChangeOrderTable ChangeTable = {changeTable}  ChangeOrderList = {ChangeOrderList}></ChangeOrderTable>
+                <ChangeOrderTable ChangeTable = {changeTable} ChangeOrderList = {ChangeOrderList}></ChangeOrderTable>
               </ModalHeader>
             <ModalBody>
               <div>
