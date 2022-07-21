@@ -1,38 +1,75 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+  body {
+    font-family: 'Roboto', 'Raleway', sans-serif;
+    font-size: 1rem;
   }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+  
+  .sellRow {
+    background-color:rgba(248, 6, 6, 0.1) !important;
   }
-  to {
-    transform: rotate(360deg);
+
+  .buyRow {
+    background-color: rgba(24, 165, 68, 0.1) !important;
   }
-}
+
+  .icon {
+    position:absolute;
+    top:0;
+    cursor: pointer;
+  }
+  
+  .changeBoxIcon {
+    right: 100px;
+  }
+
+  .modalOrderBook {
+    min-width: 30rem;
+  }
+
+  .modal-header {
+    height: 10px;
+    display: flex;
+  }
+
+  .modalHeaderText {
+    margin:0;
+  }
+
+  .modalFullScreenIcon {
+    right:42px;
+  }
+
+  .modalSettingIcon {
+    right:70px;
+  }
+
+  .progress-bar {
+    color: black !important;
+    overflow:unset !important;
+    text-align: end !important;
+  }
+
+  .orderBookTable {
+    text-align: end;
+  }
+
+  .table-sm>:not(caption)>*>* {
+    padding: 0.05rem 0.75rem !important;
+  }
+
+  .-growing {
+    animation: growing 1s;
+    animation-iteration-count: 1;
+  }
+
+  .-decreasing {
+    animation: decreasing 1s;
+    animation-iteration-count: 1;
+  }
+
+  @keyframes growing {
+    100% {background-color: green;}
+  }
+
+  @keyframes decreasing {
+    100% {background-color: red;}
+  }

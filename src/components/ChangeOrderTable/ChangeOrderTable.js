@@ -1,40 +1,24 @@
 import React from 'react';
 import { RiExchangeBoxLine } from "react-icons/ri";
-import { Modal, ModalHeader, ModalBody, Form, Input } from "reactstrap";
+import { INSTRUMENT_1, INSTRUMENT_2 } from '../../config/constants';
 
-const ChangeOrderTable = (props) => {
+const ChangeOrderTable = ({selectedCoin, setSelectedCoin}) => {
+
+  const getChannelData = () => {
+    if(selectedCoin === INSTRUMENT_1){
+      setSelectedCoin(INSTRUMENT_2)
+    } else {
+      setSelectedCoin(INSTRUMENT_1)
+    }
+  }
 
   return (
     <div>
-      <span onClick={()=>{props.ChangeTable()}}
-      style={{
-      cursor:"pointer",
-      position:"absolute",
-      right:"100px",
-      top:0,
-        }} >
+      <span onClick = {getChannelData}
+      className = "changeBoxIcon icon">
         <RiExchangeBoxLine/>
       </span>
-      <div>
-        <Modal
-          size='sm'
-          isOpen={props.ChangeOrderList}
-          toggle={props.ChangeTable}>
-          <ModalBody>
-          <Form>
-            <Input
-              bsSize="sm"
-              type="select"
-            >
-            <option>
-              Small Select
-            </option>
-            </Input>
-            </Form>
-            </ModalBody>
-          </Modal>
-        </div>
-      </div>
+    </div>
   );
 }
 export {ChangeOrderTable};

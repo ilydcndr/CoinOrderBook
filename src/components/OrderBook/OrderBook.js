@@ -1,23 +1,22 @@
-import { OrderAsk } from "../OrderAsk/OrderAsk";
-import { OrderBid } from "../OrderBid/OrderBid";
+import { OrderTable} from "../OrderTable/OrderTable";
 import React, { useState, useEffect} from 'react';
 import Draggable from "react-draggable";
 import { Modal, ModalHeader, ModalBody } from "reactstrap";
 import { AiOutlineExpandAlt, AiOutlineShrink, AiOutlineSetting } from "react-icons/ai";
 import { ChangeOrderTable } from "../ChangeOrderTable/ChangeOrderTable";
+import { BASE_URL, INSTRUMENT_1 } from '../../config/constants';
 
 const OrderBook = () => {
-  const [ShowModal, setShowModal] = useState(true);
-  const [ChangeOrderList, setChangeOrderList] = useState(false);
-  const [ModalFullScreen, setModalFullScreen] = useState(false);
-  const [SelectedCoin,setSelectedCoind] = useState('XBTUSD');
-  const [Bids,setBids] = [];
-  const [Asks,setAsks] = [];
-  const [NewBids, setNewBids] = [...Bids];
-  const [NewAsks, setNewAsks] = [];
+  const [showModal, setShowModal] = useState(true);
+  const [modalFullScreen, setModalFullScreen] = useState(false);
+  const [selectedCoin,setSelectedCoin] = useState(INSTRUMENT_1);
+  const [sellData, setSellData] = useState([]);
+  const [buyData, setBuyData] = useState([]);
+  const [allOrder, setAllOrder] = useState([]);
+
 
 	useEffect(() => {
-    let ws = new WebSocket(`wss://ws.bitmex.com/realtime?subscribe=orderBookL2: wss://www.bitmex.com/realtime?subscribe=trade:${SelectedCoin},orderBook10:${SelectedCoin}`);
+    let ws = new WebSocket(`${BASE_URL}?subscribe=orderBookL2:${selectedCoin}`);
 
     let apiCall = {};
   
@@ -26,94 +25,128 @@ const OrderBook = () => {
     };
 
     ws.onmessage = (event) => {
-      const json = JSON.parse(event.data);
-      try {
-        json.data.filter = (item => {
-          if (item.side === 'Sell') {
-              setBids([...Bids].concat(item));
-            }
-          else if (item.side === 'Buy') {
-            setAsks([...Asks].concat(item));
-          }
-        }
-        )} catch (err) {
-        console.log(err);
-        }
-    }}, []);
+    const json=JSON.parse(event.data);
+    setAllOrder(json);
+    
+    if(json.action === 'partial'){
+        let totalBuy = 0;
+        let totalSell = 0;
 
-  const newBids = () => {
-    setNewBids(NewBids.slice(0,9));
-    setBids(Bids.pop(NewBids));
-  }
+        const filteredSellData = json.data.filter((item) => item.side === 'Sell')
+        const filteredBuyData = json.data.filter((item) => item.side === 'Buy')
+        const slicedBuyData = filteredBuyData.slice(0,10);
+        const slicedSellData = filteredSellData.slice(-10);
+
+        for (let i = 9; i >= 0; i--) {
+          totalSell = totalSell + slicedSellData[i].size // cumultative for sell
+          slicedSellData[i].total = totalSell;
+          if (i === 0) {
+            let maxCumultative = slicedSellData[0].total 
+            for (let j = 0; j <= 8; j++) { //percentage for sell
+              let percentage = ( slicedSellData[j].total / maxCumultative )* 100
+              slicedSellData[j].percentage = percentage;
+            }
+          }
+        };
+     
+        setSellData(slicedSellData);
+
+        slicedBuyData.forEach((item, i) => {  //cumultative for buy
+          totalBuy = totalBuy + item.size;
+          item.total = totalBuy;
+
+          if (i === 8) {
+            let maxCumultative = slicedBuyData[8].total 
+            for (let j = 8; j >= 0; j--) { //percentage for buy
+              let percentage = ( slicedBuyData[j].total / maxCumultative )* 100
+              slicedBuyData[j].percentage = percentage;
+            }
+          }
+        });
+        
+        setBuyData(slicedBuyData); 
+      }
+    }});
+
+    /*useEffect(() => {
+      if(allOrder.action ===  'update') {
+       
+        sellData.forEach((item) => { 
+        const updatedData = allOrder.data.find((element) => {
+           return item.id = element.id;         
+         });
+
+        if(updatedData) {
+           item.size = updatedData.size
+           item.price = updatedData.price
+           item.side = updatedData.side
+           colorEffect(item, updatedData.side)
+         }
+       })
+ 
+      buyData.forEach((item) => {
+         const updatedData = allOrder.data.find((element) => {
+           return item.id = element.id;        
+         })
+         if(updatedData) {
+         item.size = updatedData?.size
+         item.price = updatedData?.price
+       }) 
+     }  
+     
+    }, [allOrder, sellData, buyData,])*/
+    
+    
+  /*const colorEffect = (item,side) => {
+    if(side === 'Buy'){
+      item.className = '-growing' // animation effect +
+    } else {
+      item.className = '-decreasing' //animation effect -
+    }
+  }*/
 
   const modalClose = () => {
     setShowModal(false);
   };
 
-  const changeTable = () => {
-    setChangeOrderList(!ChangeOrderList);
+  const handleFullScreen = () => {
+    setModalFullScreen(modalFullScreen => !modalFullScreen);
   }
-
-  const modalFullScreen = () => {
-    setModalFullScreen(ModalFullScreen => !ModalFullScreen);
-  }
-
+ 
   return (
-    <div>
+    <>
       <Draggable>
           <Modal
-            fullscreen = {ModalFullScreen}
-            isOpen={ShowModal}
+            fullscreen = {modalFullScreen}
+            isOpen={showModal}
+            className="modalOrderBook"
             toggle={() => {
               modalClose();
             }}
-             style={{
-              minWidth: "30rem",
-            }} >
+            >
             <ModalHeader
               className="modal-header bg-secondary modal-title text-black"
               toggle={() => {
                modalClose();
-              }} 
-              style={{
-                height:"10px",
-                display:"flex",
-                }} >
-              <p  style={{
-                margin:0,
-                }} > Header 
-                </p>  
+              }}>
+              <p className="modalHeaderText"> Orderbook ({selectedCoin}) </p>
                 <span onClick={() => {
-                modalFullScreen();
+                handleFullScreen();
                 }}
-                style={{
-                cursor:"pointer",
-                position:"absolute",
-                right:"42px",
-                top:0
-                  }} >
-                  {ModalFullScreen ? <AiOutlineShrink /> : <AiOutlineExpandAlt />}
+                className="modalFullScreenIcon icon" >
+                  {modalFullScreen ? <AiOutlineShrink /> : <AiOutlineExpandAlt />}
                 </span>
-                <span
-                 style={{
-                  cursor:"pointer",
-                  position:"absolute",
-                  right:"70px",
-                  top:0,
-                    }} >
+                <span className="modalSettingIcon icon">
                   <AiOutlineSetting />
                 </span>
-                <ChangeOrderTable ChangeTable = {changeTable} ChangeOrderList = {ChangeOrderList}></ChangeOrderTable>
+                <ChangeOrderTable setSelectedCoin = {setSelectedCoin} selectedCoin = {selectedCoin} ></ChangeOrderTable>
               </ModalHeader>
             <ModalBody>
-              <div>
-                <OrderAsk></OrderAsk>
-                <OrderBid></OrderBid>
-              </div>
+              <OrderTable sellData = {sellData} buyData = {buyData}  ></OrderTable>
             </ModalBody>
           </Modal>
       </Draggable>
-    </div>
+    </>
   );
 }
 
